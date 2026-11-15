@@ -63,12 +63,15 @@ export class Input {
     if (!session) return;
     let best = 0;
     for (const src of session.inputSources) {
+      // Only hand-held controllers count. On a phone every finger on the screen is
+      // also an input source whose "gamepad" axes are the touch position, so reading
+      // those would steer the robot whenever FIRE or EMP is pressed.
+      if (src.targetRayMode !== 'tracked-pointer') continue;
       const gp = src.gamepad;
       if (!gp) continue;
-      const o = gp.axes.length >= 4 ? 2 : 0; // xr-standard: thumbstick on axes 2/3
-      if (gp.axes.length >= 2) {
+      if (gp.axes.length >= 4) { // xr-standard: thumbstick on axes 2/3
         x.sticks = true;
-        const ax = gp.axes[o] || 0, ay = gp.axes[o + 1] || 0, m = Math.hypot(ax, ay);
+        const ax = gp.axes[2] || 0, ay = gp.axes[3] || 0, m = Math.hypot(ax, ay);
         if (m > best) { best = m; x.x = ax; x.y = -ay; }
       }
       if (gp.buttons[0] && gp.buttons[0].pressed) x.fire = true;
